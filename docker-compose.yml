@@ -1,0 +1,12 @@
+version: '3.7'
+services:
+
+    cli:
+        container_name: gonvd
+        build: .
+        volumes:
+            - ./:/usr/local/mounted
+        environment:
+            #- SLEEP_SECONDS: 0
+            SLEEP_SECONDS: "99999"
+            CVE_FEEDS_DIR: /usr/local/cves

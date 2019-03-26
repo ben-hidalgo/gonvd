@@ -11,3 +11,10 @@ services:
             SLEEP_SECONDS: "99999"
             MUX_ADDR: ":8000"
             CVE_FEEDS_DIR: /usr/local/cves
+
+    itests:
+        container_name: itests
+        build: ./itests/.
+        environment:
+            HOSTNAME: gonvd
+            PORT: "8000"

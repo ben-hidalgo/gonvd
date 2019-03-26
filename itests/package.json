@@ -1,0 +1,11 @@
+{
+	"description": "run integrations tests",
+	"license": "MIT",
+	"scripts": {
+		"test": "ava --fail-fast --verbose --serial"
+	},
+	"devDependencies": {
+		"ava": "1.4.0",
+		"ava-http": "1.0.0"
+	}
+}

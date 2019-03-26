@@ -1,8 +1,6 @@
 package app
 
 import (
-	// "github.com/gorilla/handlers"
-	// "log"
 	"github.com/gorilla/mux"
 )
 

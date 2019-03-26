@@ -2,7 +2,8 @@ package main
 
 import (
 	// "github.com/gorilla/handlers"
-	"github.com/ben-hidalgo/gonvd/common"
+	"github.com/ben-hidalgo/gonvd/app"
+	"net/http"
 	"log"
 )
 
@@ -10,11 +11,15 @@ import (
 
 func main() {
 
-	config := &common.Config{}
+	config := &app.Config{}
 
 	config.Init()
 
 	log.Printf("main() listening on %s", config.MuxAddr)
 
-	//log.Fatal(http.ListenAndServe(muxAddr, handlers.CORS()(server.Router)))
+	server := &app.Server{}
+
+	server.InitRoutes()
+
+	log.Fatal(http.ListenAndServe(config.MuxAddr, server.Router))
 }

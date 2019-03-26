@@ -1,7 +1,15 @@
 package app
 
-// func (s *server) routes() {
-//     s.router.HandleFunc("/api/", s.handleAPI())
-//     s.router.HandleFunc("/about", s.handleAbout())
-//     s.router.HandleFunc("/", s.handleIndex())
-// }
+import (
+	// "github.com/gorilla/handlers"
+	// "log"
+	"github.com/gorilla/mux"
+)
+
+func (s *Server) InitRoutes() {
+
+	s.Router = mux.NewRouter()
+
+    s.Router.HandleFunc("/", s.handleHealth(false))
+    s.Router.HandleFunc("/health", s.handleHealth(true))
+}

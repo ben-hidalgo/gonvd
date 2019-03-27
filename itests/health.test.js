@@ -7,12 +7,12 @@ const port=    process.env.PORT
 test('GET /', async t => {
     await http.get(`http://${hostname}:${port}/`)
         .then(res => {
-            t.deepEqual(res, {status: 'UP'})
+            t.deepEqual(res, {})
         })
 })
 
 test('GET /health', async t => {
-    await http.get(`http://${hostname}:${port}/`)
+    await http.get(`http://${hostname}:${port}/health`)
         .then(res => {
             t.deepEqual(res, {status: 'UP'})
         })

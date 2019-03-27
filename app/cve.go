@@ -1,6 +1,7 @@
 package app
 
 import (
+	"io/ioutil"
 	"log"
 )
 
@@ -23,7 +24,16 @@ type CVEItem struct {
 
 func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 
-	filenames := []string{"abc"}
+	files, err := ioutil.ReadDir(c.CVEFeedsDir)
+	if err != nil {
+		return
+	}
+
+	filenames := make([]string, len(files))
+
+	for i, f := range files {
+		filenames[i] = f.Name()
+	}
 
 	jobs := make(chan initCveContext, len(filenames))
 	results := make(chan initCveContext, len(filenames))

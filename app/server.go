@@ -5,6 +5,7 @@ import (
 )
 
 type Server struct {
-	Config Config
-	Router *mux.Router
+	Config   Config
+	Router   *mux.Router
+	CVEStore CVEStore
 }

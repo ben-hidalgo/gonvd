@@ -13,13 +13,23 @@ func main() {
 
 	config := &app.Config{}
 
-	config.Init()
-
-	log.Printf("main() listening on %s", config.MuxAddr)
+	err := config.Init()
+	if err != nil {
+		log.Fatal("main() failed config.Init()", err)
+	}
 
 	server := &app.Server{}
 
+	cveStore, err := config.InitCveStore()
+	if err != nil {
+		log.Fatal("main() failed config.InitCveStore()", err)
+	}
+
+	server.CVEStore = cveStore
+
 	server.InitRoutes()
+
+	log.Printf("main() listening on %s", config.MuxAddr)
 
 	log.Fatal(http.ListenAndServe(config.MuxAddr, server.Router))
 }

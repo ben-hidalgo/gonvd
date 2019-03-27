@@ -1,21 +1,32 @@
 package app
 
 import (
-	"net/http"
 	"encoding/json"
+	"github.com/ben-hidalgo/gonvd/restful"
+	"log"
+	"net/http"
 )
 
 func JsonResponse(w http.ResponseWriter, body interface{}, status int) {
-  
-  j, _ := json.Marshal(body)
 
-  w.Header().Set("Content-Type", "application/json")
+	j, err := json.Marshal(body)
 
-  w.WriteHeader(status)
+	if err != nil {
 
-  w.Write(j)
+		log.Printf("JsonResponse() err=%s", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	w.Header().Set(restful.HEADER_ContentType, restful.MIME_JSON)
+
+	w.WriteHeader(status)
+
+	w.Write(j)
 }
 
 func JsonSuccess(w http.ResponseWriter, body interface{}) {
-	JsonResponse(w, body, http.StatusOK)  
+	JsonResponse(w, body, http.StatusOK)
 }

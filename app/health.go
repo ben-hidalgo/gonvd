@@ -10,9 +10,9 @@ type health struct {
 }
 
 func (s *Server) handleHealth(hideBody bool) http.HandlerFunc {
-    
-    return func(w http.ResponseWriter, r *http.Request) {
-        
-        JsonSuccess(w, health{Status: "UP"})
-    }
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		JsonSuccess(w, health{Status: "UP"})
+	}
 }

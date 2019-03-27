@@ -3,8 +3,8 @@ package main
 import (
 	// "github.com/gorilla/handlers"
 	"github.com/ben-hidalgo/gonvd/app"
-	"net/http"
 	"log"
+	"net/http"
 )
 
 // https://medium.com/statuscode/how-i-write-go-http-services-after-seven-years-37c208122831

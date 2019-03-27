@@ -1,14 +1,16 @@
 version: '3.7'
 services:
 
-    cli:
+    gonvd:
         container_name: gonvd
         build: .
         volumes:
             - ./:/usr/local/mounted
+        ports:
+          - "8000:8000"
         environment:
-            #- SLEEP_SECONDS: 0
-            SLEEP_SECONDS: "99999"
+            SLEEP_SECONDS: 0
+            #SLEEP_SECONDS: "99999"
             MUX_ADDR: ":8000"
             CVE_FEEDS_DIR: /usr/local/cves
 

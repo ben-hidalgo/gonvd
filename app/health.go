@@ -1,7 +1,6 @@
 package app
 
 import (
-	"log"
 	"net/http"
 	// "github.com/ben-hidalgo/gonvd/restful"
 )
@@ -19,7 +18,6 @@ func (s *Server) handleHealth(showBody bool) http.HandlerFunc {
 		body := &health{}
 
 		if showBody {
-			log.Println("showBody true")
 			body.Status = "UP"
 		}
 

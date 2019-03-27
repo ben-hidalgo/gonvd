@@ -5,4 +5,4 @@ set -euxo pipefail
 
 sleep ${SLEEP_SECONDS}
 
-#go run main.go
+go run main.go

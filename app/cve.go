@@ -125,7 +125,7 @@ type Impact struct {
 // the important ones
 type initCveContext struct {
 	Filename string
-	CVEFile CVEFile
+	CVEFile *CVEFile
 	Error error
 }
 
@@ -190,17 +190,22 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 	close(jobs)
 
 
-	cveFiles := make([]CVEFile, len(filenames))
+	cveFiles := make([]*CVEFile, len(filenames))
 
 	for r := 0; r < len(filenames); r++ {
 		initCveContext := <-results
+
+		if initCveContext.Error != nil {
+			return CVEStore{}, initCveContext.Error
+		}
+
 		cveFiles[r] = initCveContext.CVEFile
 	}
 
 	//TODO: loop through the files and put all CVEItems into the CVEStore
 
 	for _, cf := range cveFiles {
-		log.Printf("XXX cf=%v", len(cf.CVEItems))
+		log.Printf("InitCveStore() len(cf.CVEItems)=%d", len(cf.CVEItems))
 	}
 
 	return
@@ -216,13 +221,15 @@ func (c *Config) worker(jobs <-chan *initCveContext, results chan<- *initCveCont
 
 		contents, err := ioutil.ReadFile(filepath)
 		if err != nil {
+			log.Printf("worker() ReadFile err=%s", err)
 			icc.Error = err
 		}
 
-		var cveFile CVEFile
+		cveFile := &CVEFile{}
 
 		err = json.Unmarshal(contents, cveFile)
 		if err != nil {
+			log.Printf("worker() Unmarshal err=%s", err)
 			icc.Error = err
 		}
 

@@ -1,32 +1,14 @@
 package app
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 )
 
-type initCveContext struct {
-	Filename string
-	CVEFile CVEFile
-	Error error
-}
 
-type CVEStore struct {
-	CVEItems []CVEItem
-}
-
-type CVEItem struct {
-}
-
-
-type CVEFile struct {
-	CVEDataType         string     `json:"CVE_data_type"`
-	CVEDataFormat       string     `json:"CVE_data_format"`
-	CVEDataVersion      string     `json:"CVE_data_version"`
-	CVEDataNumberOfCVEs string     `json:"CVE_data_numberOfCVEs"`
-	CVEDataTimestamp    string     `json:"CVE_data_timestamp"`
-	CVEItems            []CVEItems `json:"CVE_Items"`
-}
+// generated structs
 type CVEDataMeta struct {
 	ID       string `json:"ID"`
 	ASSIGNER string `json:"ASSIGNER"`
@@ -80,16 +62,6 @@ type DescriptionData struct {
 }
 type Description struct {
 	DescriptionData []DescriptionData `json:"description_data"`
-}
-type Cve struct {
-	DataType    string      `json:"data_type"`
-	DataFormat  string      `json:"data_format"`
-	DataVersion string      `json:"data_version"`
-	CVEDataMeta CVEDataMeta `json:"CVE_data_meta"`
-	Affects     Affects     `json:"affects"`
-	Problemtype ProblemType `json:"problemtype"`
-	References  References  `json:"references"`
-	Description Description `json:"description"`
 }
 type CpeMatch struct {
 	Vulnerable bool   `json:"vulnerable"`
@@ -148,12 +120,47 @@ type Impact struct {
 	BaseMetricV3 BaseMetricV3 `json:"baseMetricV3"`
 	BaseMetricV2 BaseMetricV2 `json:"baseMetricV2"`
 }
+
+
+// the important ones
+type initCveContext struct {
+	Filename string
+	CVEFile CVEFile
+	Error error
+}
+
+type CVEFile struct {
+	CVEDataType         string     `json:"CVE_data_type"`
+	CVEDataFormat       string     `json:"CVE_data_format"`
+	CVEDataVersion      string     `json:"CVE_data_version"`
+	CVEDataNumberOfCVEs string     `json:"CVE_data_numberOfCVEs"`
+	CVEDataTimestamp    string     `json:"CVE_data_timestamp"`
+	CVEItems            []CVEItems `json:"CVE_Items"`
+}
+
+
+type CVEItem struct {
+	DataType    string      `json:"data_type"`
+	DataFormat  string      `json:"data_format"`
+	DataVersion string      `json:"data_version"`
+	CVEDataMeta CVEDataMeta `json:"CVE_data_meta"`
+	Affects     Affects     `json:"affects"`
+	Problemtype ProblemType `json:"problemtype"`
+	References  References  `json:"references"`
+	Description Description `json:"description"`
+}
+
 type CVEItems struct {
-	Cve              Cve            `json:"cve"`
+	CVEItem          CVEItem            `json:"cve"`
 	Configurations   Configurations `json:"configurations"`
 	Impact           Impact         `json:"impact"`
 	PublishedDate    string         `json:"publishedDate"`
 	LastModifiedDate string         `json:"lastModifiedDate"`
+}
+
+// this one is used by other components in the app
+type CVEStore struct {
+	CVEItems []CVEItem
 }
 
 
@@ -170,15 +177,15 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 		filenames[i] = f.Name()
 	}
 
-	jobs := make(chan initCveContext, len(filenames))
-	results := make(chan initCveContext, len(filenames))
+	jobs    := make(chan *initCveContext, len(filenames))
+	results := make(chan *initCveContext, len(filenames))
 
 	for w := 0; w < c.CVEWorkerPoolSize; w++ {
-		go worker(jobs, results)
+		go c.worker(jobs, results)
 	}
 
 	for _, f := range filenames {
-		jobs <- initCveContext{Filename: f}
+		jobs <- &initCveContext{Filename: f}
 	}
 	close(jobs)
 
@@ -192,14 +199,34 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 
 	//TODO: loop through the files and put all CVEItems into the CVEStore
 
+	for _, cf := range cveFiles {
+		log.Printf("XXX cf=%v", len(cf.CVEItems))
+	}
+
 	return
 }
 
-func worker(jobs <-chan initCveContext, results chan<- initCveContext) {
+func (c *Config) worker(jobs <-chan *initCveContext, results chan<- *initCveContext) {
 
 	for icc := range jobs {
 
 		log.Printf("worker() filename=%s", icc.Filename)
+
+		filepath := fmt.Sprintf("%s/%s", c.CVEFeedsDir, icc.Filename)
+
+		contents, err := ioutil.ReadFile(filepath)
+		if err != nil {
+			icc.Error = err
+		}
+
+		var cveFile CVEFile
+
+		err = json.Unmarshal(contents, cveFile)
+		if err != nil {
+			icc.Error = err
+		}
+
+		icc.CVEFile = cveFile
 
 		results <- icc
 	}

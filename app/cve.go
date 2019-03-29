@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 )
 
 
@@ -135,23 +136,23 @@ type CVEFile struct {
 	CVEDataVersion      string     `json:"CVE_data_version"`
 	CVEDataNumberOfCVEs string     `json:"CVE_data_numberOfCVEs"`
 	CVEDataTimestamp    string     `json:"CVE_data_timestamp"`
-	CVEItems            []CVEItems `json:"CVE_Items"`
+	CVEItems            []CveItems `json:"CVE_Items"`
 }
 
 
-type CVEItem struct {
+type Cve struct {
 	DataType    string      `json:"data_type"`
 	DataFormat  string      `json:"data_format"`
 	DataVersion string      `json:"data_version"`
 	CVEDataMeta CVEDataMeta `json:"CVE_data_meta"`
 	Affects     Affects     `json:"affects"`
-	Problemtype ProblemType `json:"problemtype"`
+	ProblemType ProblemType `json:"problemtype"`
 	References  References  `json:"references"`
 	Description Description `json:"description"`
 }
 
-type CVEItems struct {
-	CVEItem          CVEItem            `json:"cve"`
+type CveItems struct {
+	Cve              Cve            `json:"cve"`
 	Configurations   Configurations `json:"configurations"`
 	Impact           Impact         `json:"impact"`
 	PublishedDate    string         `json:"publishedDate"`
@@ -160,7 +161,7 @@ type CVEItems struct {
 
 // this one is used by other components in the app
 type CVEStore struct {
-	CVEItems []CVEItem
+	CVEItems []CveItems
 }
 
 
@@ -202,11 +203,13 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 		cveFiles[r] = initCveContext.CVEFile
 	}
 
-	//TODO: loop through the files and put all CVEItems into the CVEStore
+	var cveItems []CveItems
 
-	for _, cf := range cveFiles {
-		log.Printf("InitCveStore() len(cf.CVEItems)=%d", len(cf.CVEItems))
+	for _, cveFile := range cveFiles {
+		cveItems = append(cveItems, cveFile.CVEItems...)
 	}
+
+	cveStore.CVEItems = cveItems
 
 	return
 }
@@ -236,5 +239,16 @@ func (c *Config) worker(jobs <-chan *initCveContext, results chan<- *initCveCont
 		icc.CVEFile = cveFile
 
 		results <- icc
+	}
+}
+
+
+func (s *Server) GetCVEs() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		body := s.CVEStore.CVEItems
+
+		JsonSuccess(w, body)
 	}
 }

@@ -243,7 +243,7 @@ func (c *Config) worker(jobs <-chan *initCveContext, results chan<- *initCveCont
 }
 
 
-func (s *Server) GetCVEs() http.HandlerFunc {
+func (s *Server) GetCveItems() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 

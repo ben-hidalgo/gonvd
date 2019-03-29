@@ -46,10 +46,6 @@ COPY main.go          main.go
 COPY app/             app/
 COPY restful/         restful/
 
-#
-RUN go build ./...
-RUN go test ./...
-
 EXPOSE 8000
 
 CMD [ "bash", "entrypoint.sh" ]

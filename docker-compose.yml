@@ -9,8 +9,7 @@ services:
         ports:
           - "8000:8000"
         environment:
-            # SLEEP_SECONDS: 0
-            SLEEP_SECONDS: "99999"
+            DEV_TEST_DEBUG: "true"
             MUX_ADDR: ":8000"
             CVE_FEEDS_DIR: /usr/local/cve
             CVE_WORKER_POOL_SIZE: "4"

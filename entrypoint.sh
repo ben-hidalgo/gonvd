@@ -3,9 +3,16 @@
 # https://vaneyckt.io/posts/safer_bash_scripts_with_set_euxo_pipefail
 set -euxo pipefail
 
-sleep ${SLEEP_SECONDS}
 
-#TODO: mechanism to delete files based on a flag for quick debug/test startup
-# rm /usr/local/cve/*20*.json
+if [ "$DEV_TEST_DEBUG" = "true" ]
+then
+    rm ${CVE_FEEDS_DIR}/*20*.json
+    echo "(cd /usr/local/mounted/ && go run main.go)" > start.sh
+    chmod +x start.sh
+    sleep 999999
+else
+    go build ./...
+    go test ./...
 
-go run main.go
+    go run main.go
+fi

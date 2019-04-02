@@ -12,4 +12,5 @@ func (s *Server) InitRoutes() {
 	s.Router.HandleFunc("/health", s.handleHealth(true))
 
 	s.Router.HandleFunc("/cveitems", s.GetCveItems())
+	s.Router.HandleFunc("/cveitems/{id}", s.GetCveItem())
 }

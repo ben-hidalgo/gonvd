@@ -2,7 +2,9 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -258,5 +260,26 @@ func (s *Server) GetCveItems() http.HandlerFunc {
 		}
 
 		JsonSuccess(w, items)
+	}
+}
+
+func (s *Server) GetCveItem() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		// appears impossible to trigger this route with an id being picked up
+		pathId, ok := mux.Vars(r)["id"]
+		if !ok {
+			JsonResponse(w, errors.New("no id found in path"), http.StatusBadRequest)
+			return
+		}
+
+		item, ok := s.CVEStore.IdToCveMap[pathId]
+		if !ok {
+			JsonResponse(w, errors.New("id not found"), http.StatusNotFound)
+			return
+		}
+
+		JsonSuccess(w, item)
 	}
 }

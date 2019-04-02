@@ -17,3 +17,17 @@ test('GET /cveitems', async t => {
             t.is(1620, res.length)
         })
 })
+
+test('GET /cveitems/{id} missing id', async t => {
+    await http.get(`http://${hostname}:${port}/cveitems/notanid`)
+        .catch(err => {
+            t.is(err.statusCode, 404)
+        })
+})
+
+test('GET /cveitems/{id}', async t => {
+    await http.get(`http://${hostname}:${port}/cveitems/CVE-2013-2805`)
+        .then(res => {
+            t.is(res.id, 'CVE-2013-2805')
+        })
+})

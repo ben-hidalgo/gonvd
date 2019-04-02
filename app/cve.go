@@ -8,7 +8,6 @@ import (
 	"net/http"
 )
 
-
 // generated structs
 type CVEDataMeta struct {
 	ID       string `json:"ID"`
@@ -122,23 +121,21 @@ type Impact struct {
 	BaseMetricV2 BaseMetricV2 `json:"baseMetricV2"`
 }
 
-
 // the important ones
 type initCveContext struct {
 	Filename string
-	CVEFile *CVEFile
-	Error error
+	CVEFile  *CVEFile
+	Error    error
 }
 
 type CVEFile struct {
-	CVEDataType         string     `json:"CVE_data_type"`
-	CVEDataFormat       string     `json:"CVE_data_format"`
-	CVEDataVersion      string     `json:"CVE_data_version"`
-	CVEDataNumberOfCVEs string     `json:"CVE_data_numberOfCVEs"`
-	CVEDataTimestamp    string     `json:"CVE_data_timestamp"`
-	CVEItems            []CveItems `json:"CVE_Items"`
+	CVEDataType         string    `json:"CVE_data_type"`
+	CVEDataFormat       string    `json:"CVE_data_format"`
+	CVEDataVersion      string    `json:"CVE_data_version"`
+	CVEDataNumberOfCVEs string    `json:"CVE_data_numberOfCVEs"`
+	CVEDataTimestamp    string    `json:"CVE_data_timestamp"`
+	CVEItems            []CveItem `json:"CVE_Items"`
 }
-
 
 type Cve struct {
 	DataType    string      `json:"data_type"`
@@ -151,7 +148,8 @@ type Cve struct {
 	Description Description `json:"description"`
 }
 
-type CveItems struct {
+type CveItem struct {
+	Id               string         `json:"id"`
 	Cve              Cve            `json:"cve"`
 	Configurations   Configurations `json:"configurations"`
 	Impact           Impact         `json:"impact"`
@@ -161,9 +159,8 @@ type CveItems struct {
 
 // this one is used by other components in the app
 type CVEStore struct {
-	CVEItems []CveItems
+	IdToCveMap map[string]CveItem
 }
-
 
 func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 
@@ -178,7 +175,7 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 		filenames[i] = f.Name()
 	}
 
-	jobs    := make(chan *initCveContext, len(filenames))
+	jobs := make(chan *initCveContext, len(filenames))
 	results := make(chan *initCveContext, len(filenames))
 
 	for w := 0; w < c.CVEWorkerPoolSize; w++ {
@@ -189,7 +186,6 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 		jobs <- &initCveContext{Filename: f}
 	}
 	close(jobs)
-
 
 	cveFiles := make([]*CVEFile, len(filenames))
 
@@ -203,13 +199,20 @@ func (c *Config) InitCveStore() (cveStore CVEStore, err error) {
 		cveFiles[r] = initCveContext.CVEFile
 	}
 
-	var cveItems []CveItems
+	cveStore.IdToCveMap = make(map[string]CveItem)
 
+	// populate the map of ids to the items
 	for _, cveFile := range cveFiles {
-		cveItems = append(cveItems, cveFile.CVEItems...)
-	}
 
-	cveStore.CVEItems = cveItems
+		for _, cveItem := range cveFile.CVEItems {
+
+			id := cveItem.Cve.CVEDataMeta.ID
+
+			cveItem.Id = id
+
+			cveStore.IdToCveMap[id] = cveItem
+		}
+	}
 
 	return
 }
@@ -242,13 +245,18 @@ func (c *Config) worker(jobs <-chan *initCveContext, results chan<- *initCveCont
 	}
 }
 
-
 func (s *Server) GetCveItems() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		body := s.CVEStore.CVEItems
+		idToCveMap := s.CVEStore.IdToCveMap
 
-		JsonSuccess(w, body)
+		var items []CveItem
+
+		for _, v := range idToCveMap {
+			items = append(items, v)
+		}
+
+		JsonSuccess(w, items)
 	}
 }
